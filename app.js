@@ -480,24 +480,41 @@ function startTimer() {
 
 function setupTiltControls() {
     const sensitivity = {
-        low: 20,
-        medium: 15,
-        high: 10
+        low: 25,
+        medium: 35,
+        high: 45
     };
 
-    const threshold = sensitivity[state.settings.tiltSensitivity] || 15;
+    const threshold = sensitivity[state.settings.tiltSensitivity] || 35;
+    let baselineBeta = null;
+    let calibrated = false;
 
     window.addEventListener('deviceorientation', handleTilt);
 
     function handleTilt(event) {
         const beta = event.beta; // Front-to-back tilt (-180 to 180)
+        const gamma = event.gamma; // Left-to-right tilt (-90 to 90)
 
-        if (beta > threshold && beta < 90) {
-            // Tilted forward (screen facing down)
+        // Skip if we don't have valid readings
+        if (beta === null || gamma === null) return;
+
+        // Calibrate baseline position (when phone is on forehead)
+        if (!calibrated) {
+            baselineBeta = beta;
+            calibrated = true;
+            return;
+        }
+
+        // Calculate change from baseline
+        const deltaFromBaseline = beta - baselineBeta;
+
+        // Tilted down (screen facing down) = correct
+        if (deltaFromBaseline > threshold) {
             window.removeEventListener('deviceorientation', handleTilt);
             markCorrect();
-        } else if (beta < -threshold && beta > -90) {
-            // Tilted backward (screen facing up)
+        }
+        // Tilted up (screen facing up) = skip
+        else if (deltaFromBaseline < -threshold) {
             window.removeEventListener('deviceorientation', handleTilt);
             markSkip();
         }
