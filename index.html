@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-fullscreen">
+    <meta name="theme-color" content="#6366f1">
+    <title>Heads Up!</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="styles.css">
+    <script>
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .then(reg => console.log('Service Worker registered'))
+                    .catch(err => console.log('Service Worker registration failed'));
+            });
+        }
+    </script>
+</head>
+<body>
+    <!-- Home Screen -->
+    <div id="home-screen" class="screen active">
+        <div class="container">
+            <h1 class="logo">Heads Up!</h1>
+            <div class="menu">
+                <button class="btn btn-primary btn-large" id="play-btn">Play</button>
+                <button class="btn btn-secondary" id="create-deck-btn">Create Deck</button>
+                <button class="btn btn-secondary" id="manage-decks-btn">Manage Decks</button>
+                <button class="btn btn-secondary" id="settings-btn">Settings</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Deck Selection Screen -->
+    <div id="deck-selection-screen" class="screen">
+        <div class="container">
+            <h2>Choose a Deck</h2>
+            <div class="deck-list" id="deck-list"></div>
+            <button class="btn btn-back" id="deck-back-btn">Back</button>
+        </div>
+    </div>
+
+    <!-- Ready Screen -->
+    <div id="ready-screen" class="screen">
+        <div class="container">
+            <h2>Get Ready!</h2>
+            <div class="instructions">
+                <p>📱 Hold phone to your forehead</p>
+                <p>⬇️ Tilt forward for correct</p>
+                <p>⬆️ Tilt backward to skip</p>
+            </div>
+            <button class="btn btn-primary btn-large" id="start-game-btn">Start Game</button>
+            <button class="btn btn-back" id="ready-back-btn">Back</button>
+        </div>
+    </div>
+
+    <!-- Gameplay Screen -->
+    <div id="gameplay-screen" class="screen">
+        <div class="game-container">
+            <div class="timer-bar">
+                <div class="timer-fill" id="timer-fill"></div>
+                <span class="timer-text" id="timer-text">60</span>
+            </div>
+            <div class="card-display">
+                <div class="card-text" id="card-text">Loading...</div>
+            </div>
+            <div class="score-display">
+                <span class="score-correct">✓ <span id="correct-count">0</span></span>
+                <span class="score-skip">⊘ <span id="skip-count">0</span></span>
+            </div>
+            <!-- Desktop Fallback Controls -->
+            <div class="desktop-controls" id="desktop-controls">
+                <button class="btn-control btn-skip" id="desktop-skip-btn">Skip ⊘</button>
+                <button class="btn-control btn-correct" id="desktop-correct-btn">Correct ✓</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Round Summary Screen -->
+    <div id="summary-screen" class="screen">
+        <div class="container">
+            <h2>Round Complete!</h2>
+            <div class="summary-stats">
+                <div class="stat">
+                    <span class="stat-label">Correct</span>
+                    <span class="stat-value" id="summary-correct">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Skipped</span>
+                    <span class="stat-value" id="summary-skip">0</span>
+                </div>
+            </div>
+            <div class="card-results" id="card-results"></div>
+            <div class="summary-actions">
+                <button class="btn btn-primary" id="play-again-btn">Play Again</button>
+                <button class="btn btn-secondary" id="summary-home-btn">Home</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Deck Screen -->
+    <div id="create-deck-screen" class="screen">
+        <div class="container">
+            <h2>Create Custom Deck</h2>
+            <input type="text" id="deck-name" class="input" placeholder="Deck Name" maxlength="30">
+            <textarea id="deck-cards" class="textarea" placeholder="Enter cards (one per line or comma-separated)"></textarea>
+            <div class="form-actions">
+                <button class="btn btn-primary" id="save-deck-btn">Save Deck</button>
+                <button class="btn btn-back" id="create-back-btn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manage Decks Screen -->
+    <div id="manage-decks-screen" class="screen">
+        <div class="container">
+            <h2>Manage Custom Decks</h2>
+            <div class="custom-deck-list" id="custom-deck-list"></div>
+            <button class="btn btn-back" id="manage-back-btn">Back</button>
+        </div>
+    </div>
+
+    <!-- Settings Screen -->
+    <div id="settings-screen" class="screen">
+        <div class="container">
+            <h2>Settings</h2>
+            <div class="settings-list">
+                <div class="setting-item">
+                    <label for="timer-duration">Round Duration</label>
+                    <select id="timer-duration" class="select">
+                        <option value="30">30 seconds</option>
+                        <option value="45">45 seconds</option>
+                        <option value="60" selected>60 seconds</option>
+                        <option value="90">90 seconds</option>
+                        <option value="120">120 seconds</option>
+                    </select>
+                </div>
+                <div class="setting-item">
+                    <label for="audio-toggle">Audio</label>
+                    <input type="checkbox" id="audio-toggle" class="toggle" checked>
+                </div>
+                <div class="setting-item">
+                    <label for="tilt-sensitivity">Tilt Sensitivity</label>
+                    <select id="tilt-sensitivity" class="select">
+                        <option value="low">Low</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="high">High</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-back" id="settings-back-btn">Back</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
