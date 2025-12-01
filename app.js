@@ -149,9 +149,29 @@ const defaultDecks = [
 
 // Initialize App
 function init() {
+    handleSyncLink();
     loadSettings();
     setupEventListeners();
     showScreen('home-screen');
+}
+
+// Handle sync link on page load
+function handleSyncLink() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const syncUserId = urlParams.get('sync');
+
+    if (syncUserId) {
+        // User clicked a sync link - adopt this user ID
+        localStorage.setItem('flipquik_user_id', syncUserId);
+
+        // Clear the URL parameter
+        window.history.replaceState({}, document.title, window.location.pathname);
+
+        // Show success message
+        setTimeout(() => {
+            alert('Device synced successfully! Your custom decks will now sync across devices.');
+        }, 500);
+    }
 }
 
 // Screen Management
@@ -223,6 +243,9 @@ function setupEventListeners() {
         saveSettings();
         showScreen('home-screen');
     });
+
+    // Sync
+    document.getElementById('copy-sync-link-btn').addEventListener('click', copySyncLink);
 }
 
 // Deck Management
@@ -673,6 +696,9 @@ function loadSettingsScreen() {
     document.getElementById('timer-duration').value = state.settings.timerDuration;
     document.getElementById('audio-toggle').checked = state.settings.audioEnabled;
     document.getElementById('tilt-sensitivity').value = state.settings.tiltSensitivity;
+
+    // Generate and display sync link
+    generateSyncLink();
 }
 
 function saveSettings() {
@@ -687,6 +713,36 @@ function loadSettings() {
     const saved = localStorage.getItem('settings');
     if (saved) {
         state.settings = JSON.parse(saved);
+    }
+}
+
+// Sync Functions
+function generateSyncLink() {
+    const userId = window.getUserId ? window.getUserId() : 'unknown';
+    const baseUrl = window.location.origin + window.location.pathname;
+    const syncLink = `${baseUrl}?sync=${userId}`;
+
+    document.getElementById('sync-link').value = syncLink;
+}
+
+function copySyncLink() {
+    const syncLinkInput = document.getElementById('sync-link');
+    syncLinkInput.select();
+    syncLinkInput.setSelectionRange(0, 99999); // For mobile
+
+    try {
+        document.execCommand('copy');
+
+        // Change button text temporarily
+        const copyBtn = document.getElementById('copy-sync-link-btn');
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+
+        setTimeout(() => {
+            copyBtn.textContent = originalText;
+        }, 2000);
+    } catch (err) {
+        alert('Failed to copy. Please copy the link manually.');
     }
 }
 
